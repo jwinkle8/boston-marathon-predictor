@@ -1,14 +1,22 @@
 # Clean the raw Boston Marathon results (2015-2017) from Kaggle.
 #
-# This only needs to be run once. The cleaned file it makes is what we upload
-# to Google Cloud Storage, and the training pipeline downloads it from there.
+# Run this when the raw data or the cleaning steps change. Every run saves a
+# new version of the cleaned file (v1, v2, ...), so an older version never gets
+# overwritten. The cleaned file is what we upload to Google Cloud Storage, and
+# the training pipeline downloads it from there.
 #
 # Before running, download the three files from Kaggle and put them in data/raw/:
 #   marathon_results_2015.csv, marathon_results_2016.csv, marathon_results_2017.csv
 #
 # Run from the main folder of the repo: python src/clean_data.py
 
+import os
+
 import pandas as pd
+import yaml
+from google.cloud import storage
+
+from download_data import FILE_PREFIX
 
 YEARS = [2015, 2016, 2017]
 
@@ -26,6 +34,22 @@ def time_to_minutes(column):
     # Times are text like "1:45:30". Missing splits are "-", and errors="coerce"
     # turns those into NaN instead of crashing.
     return pd.to_timedelta(column, errors="coerce").dt.total_seconds() / 60
+
+
+def next_version(bucket_name):
+    # Looks at the cleaned files that are already in the bucket and returns the
+    # next version number. If the bucket has v1 and v2, this returns 3.
+    client = storage.Client.create_anonymous_client()
+    versions = []
+    for blob in client.list_blobs(bucket_name, prefix=FILE_PREFIX):
+        # file names look like boston_clean_v2.csv
+        number = blob.name.replace(FILE_PREFIX, "").replace(".csv", "")
+        versions.append(int(number))
+    return max(versions, default=0) + 1
+
+
+with open("config.yaml") as f:
+    config = yaml.safe_load(f)
 
 
 # ----- Load the three years and stack them -----
@@ -73,5 +97,11 @@ print("Rows in cleaned data:", len(df))
 print("Different runners:", df["runner_id"].nunique())
 print(df.describe().round(1))
 
-df.to_csv("data/boston_clean_v1.csv", index=False)
-print("Saved data/boston_clean_v1.csv")
+# ----- Save as a new version -----
+version = next_version(config["data"]["bucket_name"])
+output_path = f"data/clean/{FILE_PREFIX}{version}.csv"
+
+os.makedirs("data/clean", exist_ok=True)
+df.to_csv(output_path, index=False)
+print("Saved", output_path)
+print(f"To use it, upload it to the bucket and set data.version to {version} in config.yaml")

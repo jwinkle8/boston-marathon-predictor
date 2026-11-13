@@ -44,10 +44,8 @@ seed = config["split"]["random_seed"]
 
 
 # ----- 1. Get the data from the cloud -----
-download_data(config["data"]["bucket_name"],
-              config["data"]["blob_name"],
-              config["data"]["local_path"])
-df = pd.read_csv(config["data"]["local_path"])
+data_path = download_data(config["data"]["bucket_name"], config["data"]["version"])
+df = pd.read_csv(data_path)
 print("Rows:", len(df))
 
 
@@ -149,7 +147,7 @@ with mlflow.start_run(run_name=model_type):
     mlflow.log_params(config["model"])
     mlflow.log_params(config["split"])
     mlflow.log_param("features", numeric + categorical)
-    mlflow.log_param("data_file", config["data"]["blob_name"])
+    mlflow.log_param("data_version", config["data"]["version"])
     mlflow.log_param("train_rows", len(train))
     mlflow.log_param("val_rows", len(val))
     mlflow.log_param("test_rows", len(test))
