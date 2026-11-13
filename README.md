@@ -9,13 +9,14 @@ Team: Caleb McNeill, Justin Winkler, Ben Dushnitzky
 
 ## Overview
 
-You're halfway through a marathon. What time are you going to finish in? Most runners
-just double their halfway time, but almost everybody slows down in the second half, so
-that guess is usually too fast.
+You're halfway through a marathon. Now you want to know what time you will finish in.
+A rule of thumb suggests runners simply double their first half-marathon split to get a 
+guess, but late-race blunders in nutrition, hydration, and pacing make this estimate 
+optimistic for many.
 
 This project predicts a runner's finish time from their age, gender and their times at
-the 5K, 10K and halfway checkpoints. The model itself is simple. The main goal was to
-build the whole pipeline around it:
+various race checkpoints. The model itself is simple. The main goal was to build the 
+whole pipeline around it:
 
 1. Clean the data and host it in the cloud (Google Cloud Storage)
 2. Train a model with a pipeline that is controlled by `config.yaml`
@@ -37,7 +38,7 @@ site by the Kaggle author. Kaggle lists the license as "Unknown".
 - Combined the three years by column name, because the files don't have exactly the same columns
 - Kept only age, gender, the 5K / 10K / half splits and the finish time
 - Dropped the columns that are calculated from the finish time (pace, projected time, overall / gender / division place), because they would give the answer away
-- Dropped the splits after halfway, since we predict from the halfway point
+- Dropped the splits after halfway, since we predict from the halfway point or earlier
 - Converted all times from text like `1:45:30` to minutes
 - Dropped 354 rows that were missing a split (shown as `-` in the raw files)
 - Replaced each runner's name with a number (`runner_id`), so the cleaned file has no names, bib numbers or cities in it
@@ -80,14 +81,31 @@ report RMSE and R².
 called `slowdown`. It's the runner's pace from 10K to halfway minus their pace over the
 first 10K. If it's positive, they were already slowing down before halfway.
 
+**Four models, one for each set of times a runner knows.** Not everyone (or the friend
+tracking them) knows all three checkpoint times, so besides the main model we train three
+more that each use only one split:
+
+| Model | Features | Used when the runner gives us |
+|---|---|---|
+| `all_splits` | age, gender, 5K, 10K, half, `slowdown` | all three splits |
+| `half_only` | age, gender, half | the half split, but not all three |
+| `10k_only` | age, gender, 10K | the 10K split, but not the half |
+| `5k_only` | age, gender, 5K | only the 5K split |
+
+The API picks the model from the splits in the request. If a runner gives two splits, it
+uses the model for the later one and ignores the earlier one. The single-split models
+don't get `slowdown`, because it needs two splits. Everything else (the pipeline, the
+random forest settings, the data split) is the same for all four. The feature lists are
+in `config.yaml`.
+
 **Model:** a scikit-learn `Pipeline` with two steps: one-hot encoding for gender, then a
 random forest (100 trees, max depth 10). The preprocessing and the model are saved
 together as one file, so the API uses the exact same preprocessing as training. You can
 switch to linear regression by changing `model.type` in `config.yaml`.
 
-**Split:** 70% train, 15% validation, 15% test. About 1 in 7 runners is in the data more
-than once because they ran in more than one year. We split by runner instead of by row,
-so the same person is never in both the training and test sets.
+**Split:** 70% train, 15% validation, 15% test. About 1 in 7 runners appears in the data 
+more than once because they ran in more than one year. We split by runner instead of by 
+row, so the same person is never in both the training and test sets.
 
 **Results:**
 
@@ -100,6 +118,26 @@ so the same person is never in both the training and test sets.
 The model is off by about 7.5 minutes on average. That's about half the error of just
 doubling your halfway time, mostly because the model learned that people slow down in
 the second half. The random forest is only a little better than plain linear regression.
+
+The single-split models (all random forests), next to the main one. Each baseline is
+"keep the pace you had at that checkpoint all the way to the finish", which for the half
+split is the same as doubling it:
+
+| Model | Validation MAE | Test MAE | Test RMSE | Test R² | Baseline test MAE |
+|---|---|---|---|---|---|
+| `all_splits` | 7.54 min | 7.50 min | 11.33 | 0.926 | 14.98 min |
+| `half_only` | 8.85 min | 8.87 min | 12.83 | 0.906 | 14.98 min |
+| `10k_only` | 12.35 min | 12.31 min | 17.04 | 0.834 | 19.03 min |
+| `5k_only` | 14.15 min | 14.02 min | 19.34 | 0.786 | 19.87 min |
+
+The earlier the checkpoint, the bigger the error, which makes sense: at 5K there are
+still 37 km left to go wrong. Every model still beats its baseline by about 6 to 7
+minutes. All four are tested on the same runners, so we could compare them runner by
+runner: resampling the test runners 1,000 times, the 95% interval for each model's
+improvement over its baseline is at most 0.4 minutes wide and nowhere near zero (for
+example 5.6 to 6.1 minutes for `5k_only`). The app shows each model's own test MAE as
+its "give or take", so a prediction from the 5K time alone is shown as less certain
+than one from all three splits.
 
 ![Predicted vs actual finish time on the test set](images/predicted_vs_actual.png)
 
@@ -134,15 +172,15 @@ python src/train.py
 
 This downloads the cleaned data from our Google Cloud Storage bucket (the file is
 public, so you don't need a Google Cloud account), trains the model, prints the
-metrics, and saves the model to `models/model.joblib`. The settings (data version,
-features, split sizes, random seed, model type and its parameters) all come from
-`config.yaml`.
+metrics, and saves each of the four models in its own folder, like
+`models/all_splits/model.joblib`. The settings (data version, features for each model,
+split sizes, random seed, model type and its parameters) all come from `config.yaml`.
 
 ### 3. Look at the runs in MLflow
 
-Every training run is logged to MLflow: the parameters (including which data version
-it used), the metrics, the config file, the predicted vs actual plot and the model
-itself.
+Every training run is logged to MLflow, one run for each of the four models: the
+parameters (including which data version and which features it used), the metrics, the
+config file, the predicted vs actual plot and the model itself.
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db
@@ -169,7 +207,22 @@ curl -X POST http://localhost:8080/predict \
 All times are in minutes. You should get back:
 
 ```json
-{"predicted_finish_minutes": 224.6, "predicted_finish_time": "3:44:38", "typical_error_minutes": 7.5}
+{"predicted_finish_minutes": 224.6, "predicted_finish_time": "3:44:38", "typical_error_minutes": 7.5,
+ "model_used": "all_splits", "splits_used": ["split_5k", "split_10k", "split_half"]}
+```
+
+The three splits are optional, but you have to send at least one. Leave out the ones you
+don't know and the API uses the model that fits:
+
+```bash
+curl -X POST http://localhost:8080/predict \
+  -H "Content-Type: application/json" \
+  -d '{"age": 35, "gender": "F", "split_10k": 51}'
+```
+
+```json
+{"predicted_finish_minutes": 229.5, "predicted_finish_time": "3:49:27", "typical_error_minutes": 12.31,
+ "model_used": "10k_only", "splits_used": ["split_10k"]}
 ```
 
 You can also open http://localhost:8080/docs to try it in the browser.
@@ -181,8 +234,8 @@ docker build -t marathon-api .
 docker run -p 8080:8080 marathon-api
 ```
 
-Building the image downloads the data and trains the model, so the image always has a
-trained model inside. Running it starts the API on port 8080, and you can test it with
+Building the image downloads the data and trains all four models, so the image always
+has the trained models inside. Running it starts the API on port 8080, and you can test it with
 the same curl command as above.
 
 To run just the training step in a container:
