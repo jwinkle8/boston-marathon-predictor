@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data, trained models and MLflow runs (these live in the cloud or get
+# recreated by the pipeline, so they don't belong in git)
+data/
+models/
+mlruns/
+mlflow.db
