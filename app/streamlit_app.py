@@ -13,7 +13,7 @@ import requests
 import streamlit as st
 
 # URL of the deployed API on Cloud Run
-API_URL = os.environ.get("API_URL", "https://REPLACE-WITH-CLOUD-RUN-URL")
+API_URL = os.environ.get("API_URL", "https://marathon-api-338903196905.us-east1.run.app")
 
 
 def to_minutes(hours, minutes, seconds):
