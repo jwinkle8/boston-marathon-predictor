@@ -5,7 +5,7 @@ AIPI 510 Module Project 3 (Data/ML Engineering)
 Team: Caleb McNeill, Justin Winkler, Ben Dushnitzky
 
 - **Front-end app:** TODO (link goes here once it's deployed)
-- **API:** TODO (Cloud Run link goes here once it's deployed)
+- **API:** https://marathon-api-338903196905.us-east1.run.app ([try it in the browser](https://marathon-api-338903196905.us-east1.run.app/docs))
 
 ## Overview
 
@@ -200,10 +200,11 @@ gcloud run deploy marathon-api --source . --region us-east1 --memory 1Gi --allow
 ```
 
 This builds the Dockerfile with Cloud Build and deploys it. When it's done it prints
-the service URL. Test it the same way as before:
+the service URL. Ours is the API link at the top of this page. Test it the same way as
+before:
 
 ```bash
-curl -X POST https://YOUR-SERVICE-URL/predict \
+curl -X POST https://marathon-api-338903196905.us-east1.run.app/predict \
   -H "Content-Type: application/json" \
   -d '{"age": 35, "gender": "F", "split_5k": 25.5, "split_10k": 51, "split_half": 108}'
 ```
