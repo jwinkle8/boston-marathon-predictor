@@ -1,0 +1,4 @@
+# Packages for the pipeline.
+pandas==3.1.1
+PyYAML==6.0.3
+google-cloud-storage==3.17.1

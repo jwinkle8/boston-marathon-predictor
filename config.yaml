@@ -1,0 +1,7 @@
+# Settings for the whole pipeline.
+# Change things here instead of in the code.
+
+data:
+  bucket_name: aipi510-boston-marathon      # Google Cloud Storage bucket
+  blob_name: boston_clean_v1.csv            # name of the cleaned file in the bucket
+  local_path: data/boston_clean_v1.csv      # where the file gets saved after download
