@@ -4,6 +4,7 @@ AIPI 510 Module Project 3 (Data/ML Engineering)
 
 Team: Caleb McNeill, Justin Winkler, Ben Dushnitzky
 
+- **Front-end app:** TODO (link goes here once it's deployed)
 - **API:** TODO (Cloud Run link goes here once it's deployed)
 
 ## Overview
@@ -64,6 +65,9 @@ src/
   features.py          # feature engineering, shared by training and the API
   train.py             # the training pipeline (logs to MLflow)
   api.py               # FastAPI app with the /predict endpoint
+app/
+  streamlit_app.py     # front-end that calls the deployed API
+  requirements.txt     # packages for the front-end
 ```
 
 ## Model and evaluation
@@ -110,6 +114,7 @@ from the first half alone.
 | Google Cloud Storage | Hosts the cleaned data file. The pipeline downloads it from there. |
 | Google Cloud Build | Builds the Docker image when we deploy |
 | Google Cloud Run | Runs the API container and gives it a public URL |
+| Streamlit Community Cloud | Hosts the front-end app |
 
 ## How to run it
 
@@ -204,6 +209,26 @@ curl -X POST https://YOUR-SERVICE-URL/predict \
   -H "Content-Type: application/json" \
   -d '{"age": 35, "gender": "F", "split_5k": 25.5, "split_10k": 51, "split_half": 108}'
 ```
+
+### 7. Run the front-end
+
+The live app is linked at the top of this page. To run it on your own computer:
+
+```bash
+pip install -r app/requirements.txt
+streamlit run app/streamlit_app.py
+```
+
+It sends requests to the deployed API by default. To use an API running on your own
+computer instead:
+
+```bash
+API_URL=http://localhost:8080 streamlit run app/streamlit_app.py
+```
+
+To deploy it we used [Streamlit Community Cloud](https://streamlit.io/cloud): sign in
+with GitHub, click "Create app", pick this repo, and set the main file path to
+`app/streamlit_app.py`.
 
 ## How the data got into the cloud
 
