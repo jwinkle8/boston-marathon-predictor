@@ -4,6 +4,8 @@ AIPI 510 Module Project 3 (Data/ML Engineering)
 
 Team: Caleb McNeill, Justin Winkler, Ben Dushnitzky
 
+- **API:** TODO (Cloud Run link goes here once it's deployed)
+
 ## Overview
 
 You're halfway through a marathon. What time are you going to finish in? Most runners
@@ -54,12 +56,14 @@ The cleaned file has 79,284 rows and 67,427 different runners.
 
 ```
 config.yaml            # all the settings for the pipeline
-requirements.txt       # packages for the training pipeline
+requirements.txt       # packages for training and the API
+Dockerfile             # trains the model and serves the API
 src/
   clean_data.py        # raw Kaggle files -> cleaned file (run once)
   download_data.py     # downloads the cleaned file from Google Cloud Storage
-  features.py          # feature engineering
+  features.py          # feature engineering, shared by training and the API
   train.py             # the training pipeline (logs to MLflow)
+  api.py               # FastAPI app with the /predict endpoint
 ```
 
 ## Model and evaluation
@@ -104,6 +108,8 @@ from the first half alone.
 | Service | What we use it for |
 |---|---|
 | Google Cloud Storage | Hosts the cleaned data file. The pipeline downloads it from there. |
+| Google Cloud Build | Builds the Docker image when we deploy |
+| Google Cloud Run | Runs the API container and gives it a public URL |
 
 ## How to run it
 
@@ -138,6 +144,66 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
 Then open http://localhost:5000.
+
+### 4. Run and test the API locally
+
+```bash
+uvicorn api:app --app-dir src --port 8080
+```
+
+(`--app-dir src` just tells uvicorn that the code is in the `src` folder.)
+
+In another terminal:
+
+```bash
+curl -X POST http://localhost:8080/predict \
+  -H "Content-Type: application/json" \
+  -d '{"age": 35, "gender": "F", "split_5k": 25.5, "split_10k": 51, "split_half": 108}'
+```
+
+All times are in minutes. You should get back:
+
+```json
+{"predicted_finish_minutes": 224.6, "predicted_finish_time": "3:44:38", "typical_error_minutes": 7.5}
+```
+
+You can also open http://localhost:8080/docs to try it in the browser.
+
+### 5. Run it with Docker
+
+```bash
+docker build -t marathon-api .
+docker run -p 8080:8080 marathon-api
+```
+
+Building the image downloads the data and trains the model, so the image always has a
+trained model inside. Running it starts the API on port 8080, and you can test it with
+the same curl command as above.
+
+To run just the training step in a container:
+
+```bash
+docker run marathon-api python src/train.py
+```
+
+### 6. Deploy the API to Google Cloud Run
+
+You need a Google Cloud project with billing turned on and the
+[gcloud CLI](https://cloud.google.com/sdk/docs/install) (or use Cloud Shell in the
+browser, which already has it).
+
+```bash
+gcloud run deploy marathon-api --source . --region us-east1 --memory 1Gi --allow-unauthenticated
+```
+
+This builds the Dockerfile with Cloud Build and deploys it. When it's done it prints
+the service URL. Test it the same way as before:
+
+```bash
+curl -X POST https://YOUR-SERVICE-URL/predict \
+  -H "Content-Type: application/json" \
+  -d '{"age": 35, "gender": "F", "split_5k": 25.5, "split_10k": 51, "split_half": 108}'
+```
 
 ## How the data got into the cloud
 
