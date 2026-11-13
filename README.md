@@ -113,7 +113,7 @@ from the first half alone.
 
 ## How to run it
 
-You need Python 3.11. Run all the commands from the main folder of the repo.
+You need Python 3.11 or greater. Run all the commands from the main folder of the repo.
 
 ### 1. Install the packages
 
@@ -129,13 +129,15 @@ python src/train.py
 
 This downloads the cleaned data from our Google Cloud Storage bucket (the file is
 public, so you don't need a Google Cloud account), trains the model, prints the
-metrics, and saves the model to `models/model.joblib`. The settings (features, split
-sizes, random seed, model type and its parameters) all come from `config.yaml`.
+metrics, and saves the model to `models/model.joblib`. The settings (data version,
+features, split sizes, random seed, model type and its parameters) all come from
+`config.yaml`.
 
 ### 3. Look at the runs in MLflow
 
-Every training run is logged to MLflow: the parameters, the metrics, the config file,
-the predicted vs actual plot and the model itself.
+Every training run is logged to MLflow: the parameters (including which data version
+it used), the metrics, the config file, the predicted vs actual plot and the model
+itself.
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db
@@ -205,18 +207,38 @@ curl -X POST https://YOUR-SERVICE-URL/predict \
 
 ## How the data got into the cloud
 
-This only had to be done once.
+You don't need to do any of this to run the project, because the data is already in our
+bucket. This section is here to document how it got there.
+
+If you want to set it up yourself, you need a Google Cloud project and the
+[gcloud CLI](https://cloud.google.com/sdk/docs/install), logged in with
+`gcloud auth login` and pointed at your project with
+`gcloud config set project YOUR-PROJECT-ID`. Bucket names have to be unique across all
+of Google Cloud, so you'll also need to pick a different bucket name and put it in
+`config.yaml`.
 
 1. Download the three CSV files from Kaggle and put them in `data/raw/`
-2. Clean them: `python src/clean_data.py` (this creates `data/boston_clean_v1.csv`)
+2. Clean them: `python src/clean_data.py` (the first time, this created `data/clean/boston_clean_v1.csv`)
 3. Create a bucket, upload the cleaned file, and make it readable by anyone:
 
 ```bash
 gcloud storage buckets create gs://aipi510-boston-marathon --location=us-east1
-gcloud storage cp data/boston_clean_v1.csv gs://aipi510-boston-marathon/
+gcloud storage cp data/clean/boston_clean_v1.csv gs://aipi510-boston-marathon/
 gcloud storage buckets add-iam-policy-binding gs://aipi510-boston-marathon \
   --member=allUsers --role=roles/storage.objectViewer
 ```
 
-We only uploaded the cleaned file, which has no names in it. The raw files with names
-are not in the bucket or in this repo.
+For privacy concerns, we only uploaded the cleaned file, which has no names in it. The
+raw files with names are not in the bucket or in this repo.
+
+### Data versions
+
+The cleaned files are versioned: `boston_clean_v1.csv`, `boston_clean_v2.csv`, and so on.
+Every time `clean_data.py` runs, it checks which versions are already in the bucket and
+saves the next one in `data/clean/`. That way an older version never gets overwritten,
+and old training runs can still be traced back to the exact data they used.
+
+To switch the pipeline to a new version:
+
+1. Upload it: `gcloud storage cp data/clean/boston_clean_v2.csv gs://aipi510-boston-marathon/`
+2. Set `data.version` to `2` in `config.yaml`
