@@ -11,6 +11,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY config.yaml .
 COPY src/ src/
 
+# MLflow tries to save the git commit with each run, but there's no git inside
+# this image. This stops it from printing a long warning about that.
+ENV GIT_PYTHON_REFRESH=quiet
+
 # Training entry point.
 # Downloads the data from our cloud bucket and trains the model while the image
 # is being built, so the finished image always has a trained model inside.
