@@ -8,6 +8,8 @@
 #
 # Run from the main folder of the repo: python src/clean_data.py
 
+import os
+
 import pandas as pd
 
 YEARS = [2015, 2016, 2017]
@@ -73,5 +75,6 @@ print("Rows in cleaned data:", len(df))
 print("Different runners:", df["runner_id"].nunique())
 print(df.describe().round(1))
 
-df.to_csv("data/boston_clean_v1.csv", index=False)
-print("Saved data/boston_clean_v1.csv")
+os.makedirs("data/clean", exist_ok=True)
+df.to_csv("data/clean/boston_clean_v1.csv", index=False)
+print("Saved data/clean/boston_clean_v1.csv")

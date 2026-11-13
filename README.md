@@ -83,7 +83,7 @@ python src/download_data.py
 ```
 
 This downloads the cleaned data from our Google Cloud Storage bucket to
-`data/boston_clean_v1.csv`. The file is public, so you don't need a Google Cloud
+`data/clean/boston_clean_v1.csv`. The file is public, so you don't need a Google Cloud
 account. The bucket and file names are set in `config.yaml`.
 
 ## How the data got into the cloud
@@ -91,12 +91,12 @@ account. The bucket and file names are set in `config.yaml`.
 This only had to be done once.
 
 1. Download the three CSV files from Kaggle and put them in `data/raw/`
-2. Clean them: `python src/clean_data.py` (this creates `data/boston_clean_v1.csv`)
+2. Clean them: `python src/clean_data.py` (this creates `data/clean/boston_clean_v1.csv`)
 3. Create a bucket, upload the cleaned file, and make it readable by anyone:
 
 ```bash
 gcloud storage buckets create gs://aipi510-boston-marathon --location=us-east1
-gcloud storage cp data/boston_clean_v1.csv gs://aipi510-boston-marathon/
+gcloud storage cp data/clean/boston_clean_v1.csv gs://aipi510-boston-marathon/
 gcloud storage buckets add-iam-policy-binding gs://aipi510-boston-marathon \
   --member=allUsers --role=roles/storage.objectViewer
 ```
