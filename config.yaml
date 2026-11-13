@@ -6,8 +6,15 @@ data:
   version: 1                                # which version of the cleaned data to use
 
 features:
-  numeric: [age, split_5k, split_10k, split_half, slowdown]
   categorical: [gender]
+  # One model is trained for each list below. Runners don't always know all three
+  # of their checkpoint times, so the API picks the model that matches the times
+  # it was given. Everything else about the models is the same.
+  numeric:
+    all_splits: [age, split_5k, split_10k, split_half, slowdown]
+    half_only: [age, split_half]
+    10k_only: [age, split_10k]
+    5k_only: [age, split_5k]
 
 target: finish_time     # finish time in minutes
 
@@ -25,7 +32,9 @@ mlflow:
   tracking_uri: sqlite:///mlflow.db
   experiment_name: boston-marathon-finish-time
 
+# Each model gets its own folder: models/all_splits/, models/half_only/, ...
 output:
-  model_path: models/model.joblib
-  metrics_path: models/metrics.json
-  plot_path: models/predicted_vs_actual.png
+  model_dir: models
+  model_file: model.joblib
+  metrics_file: metrics.json
+  plot_file: predicted_vs_actual.png
