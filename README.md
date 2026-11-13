@@ -123,13 +123,15 @@ python src/train.py
 
 This downloads the cleaned data from our Google Cloud Storage bucket (the file is
 public, so you don't need a Google Cloud account), trains the model, prints the
-metrics, and saves the model to `models/model.joblib`. The settings (features, split
-sizes, random seed, model type and its parameters) all come from `config.yaml`.
+metrics, and saves the model to `models/model.joblib`. The settings (data version,
+features, split sizes, random seed, model type and its parameters) all come from
+`config.yaml`.
 
 ### 3. Look at the runs in MLflow
 
-Every training run is logged to MLflow: the parameters, the metrics, the config file,
-the predicted vs actual plot and the model itself.
+Every training run is logged to MLflow: the parameters (including which data version
+it used), the metrics, the config file, the predicted vs actual plot and the model
+itself.
 
 ```bash
 mlflow ui --backend-store-uri sqlite:///mlflow.db
