@@ -82,16 +82,14 @@ pip install -r requirements.txt
 python src/download_data.py
 ```
 
-This downloads the cleaned data from our Google Cloud Storage bucket to
-`data/clean/boston_clean_v1.csv`. The file is public, so you don't need a Google Cloud
-account. The bucket and file names are set in `config.yaml`.
+This downloads the cleaned data from our Google Cloud Storage bucket to the
+`data/clean/` folder. The file is public, so you don't need a Google Cloud account.
+The bucket name and the data version are set in `config.yaml`.
 
 ## How the data got into the cloud
 
-This only had to be done once.
-
 1. Download the three CSV files from Kaggle and put them in `data/raw/`
-2. Clean them: `python src/clean_data.py` (this creates `data/clean/boston_clean_v1.csv`)
+2. Clean them: `python src/clean_data.py` (the first time, this created `data/clean/boston_clean_v1.csv`)
 3. Create a bucket, upload the cleaned file, and make it readable by anyone:
 
 ```bash
@@ -100,6 +98,18 @@ gcloud storage cp data/clean/boston_clean_v1.csv gs://aipi510-boston-marathon/
 gcloud storage buckets add-iam-policy-binding gs://aipi510-boston-marathon \
   --member=allUsers --role=roles/storage.objectViewer
 ```
+
+### Data versions
+
+The cleaned files are versioned: `boston_clean_v1.csv`, `boston_clean_v2.csv`, and so on.
+Every time `clean_data.py` runs, it checks which versions are already in the bucket and
+saves the next one in `data/clean/`. That way an older version never gets overwritten,
+and old training runs can still be traced back to the exact data they used.
+
+To switch the pipeline to a new version:
+
+1. Upload it: `gcloud storage cp data/clean/boston_clean_v2.csv gs://aipi510-boston-marathon/`
+2. Set `data.version` to `2` in `config.yaml`
 
 We only uploaded the cleaned file, which has no names in it. The raw files with names
 are not in the bucket or in this repo.
