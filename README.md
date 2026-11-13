@@ -4,7 +4,7 @@ AIPI 510 Module Project 3 (Data/ML Engineering)
 
 Team: Caleb McNeill, Justin Winkler, Ben Dushnitzky
 
-- **Front-end app:** TODO (link goes here once it's deployed)
+- **Front-end app:** https://boston-marathon-predictor.streamlit.app
 - **API:** https://marathon-api-338903196905.us-east1.run.app ([try it in the browser](https://marathon-api-338903196905.us-east1.run.app/docs))
 
 ## Overview
