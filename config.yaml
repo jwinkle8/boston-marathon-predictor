@@ -1,0 +1,6 @@
+# Settings for the whole pipeline.
+# Change things here instead of in the code.
+
+data:
+  bucket_name: aipi510-boston-marathon      # Google Cloud Storage bucket
+  version: 1                                # which version of the cleaned data to use
