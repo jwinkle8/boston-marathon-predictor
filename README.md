@@ -107,56 +107,6 @@ The plot shows the model does well for most runners but misses the ones who slow
 a lot late in the race (the points well below the red line). It can't see that coming
 from the first half alone.
 
-## Limitations
-
-- **The data is only from the Boston Marathon, and most Boston runners had to qualify.**
-  About 80% of the field qualified by running another marathon faster than a standard
-  the Boston Athletic Association sets each year. The runners in our data are faster and
-  better trained for the distance than the typical marathoner, so the predictions are
-  probably too fast for an average runner.
-- **Three race days on one course.** The data only covers 2015, 2016 and 2017, so the
-  model has seen just three days of weather and can't tell a hot year from a cool one.
-  Every race was also on Boston's course, so the predictions may not carry over to a
-  course with different hills.
-- **The races were run before "supershoes" and newer fueling strategies became common.**
-  Both have made runners more efficient late in the race, which is exactly the part our
-  model predicts. The model learned the late-race slowdown of 2015-2017 runners, so for
-  today's runners its predictions may be too slow.
-- **We only know what the race organizers chose to record.** The only personal details
-  in the results are age, gender, and where the runner is from, and we use just age and
-  gender. Things that matter a lot for a finish time, like training volume or how many
-  marathons someone has run, were never collected, so the model can't use them.
-- **Gender is only recorded as M or F.** The app and the API can only offer those two
-  options because that's all the data has.
-
-## Ethics
-
-*This section is a starting point and is not finished. See "Still to do" below.*
-
-- **The dataset's license is unknown.** Kaggle lists the license as "Unknown". The
-  Kaggle author scraped the results from the official Boston Marathon results site, and
-  we don't know whether the site's terms of service or `robots.txt` allowed that. We
-  can't say for sure that we have the right to reuse or share this data. We don't share
-  the raw files, but we do host a cleaned version of them in a public bucket.
-- **The runners didn't agree to be in this project.** The raw files have each runner's
-  name, bib number, city, state and country. Race results are public, but the runners
-  were never asked about being used to train a model.
-- **The cleaned data has no names, but it isn't truly anonymous.** We replaced names
-  with a number and dropped bib numbers and locations. The cleaned file still has each
-  runner's age, gender, race year and exact times, and those could be matched back to
-  the public results to find out who a row belongs to.
-- **Gender is only M or F.** That's all the results record, so the app can't serve
-  runners who don't fit either option.
-- **The app is for fun and educational purposes.** A prediction shouldn't be used to make decisions about
-  health, training or pacing during a race. We note this on the app (see "About this
-  prediction").
-
-**Still to do:**
-
-- [ ] Find out what the Boston Athletic Association's terms say about reusing results,
-      and decide whether the cleaned file should stay public
-- [ ] Decide what to do if a runner asks for their results to be removed
-
 ## Cloud services
 
 | Service | What we use it for |
