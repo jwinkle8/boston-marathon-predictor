@@ -122,20 +122,12 @@ The Boston Marathon traditionally starts with four waves [1], and runners may ex
 
 ## Ethics
 
-*This section is a starting point and is not finished. See "Still to do" below.*
-
 - **The dataset's license is unknown.** Kaggle lists the license as "Unknown" [3]. The Kaggle author scraped the results from the official Boston Marathon results site, and we don't know whether the site's terms of service or `robots.txt` allowed that [2]. We can't say for sure that we have the right to reuse or share this data. We don't share the raw files, but we do host a cleaned version of them in a public bucket.
 - **The runners didn't agree to be in this project.** The raw files have each runner's name, bib number, city, state and country [3]. Race results are public, but the runners were never asked about being used to train a model.
 - **The cleaned data has no names, but it isn't truly anonymous.** We replaced names
   with a number and dropped bib numbers and locations. The cleaned file still has each runner's age, gender, race year and exact times, and those could be matched back to the public results to find out who a row belongs to [3].
 - **Gender is only M or F.** That's all the results record [3], so the app can't serve runners who don't fit either option. The model's interpretation of gender is therefore limited to the binary M/F interpretation of self-registered entries of runners. The Boston Athletic Association would 
 - **The app is for fun and educational purposes.** A prediction shouldn't be used to make decisions about health, training or pacing during a race. We note this on the app (see "About this prediction").
-
-**Still to do:**
-
-- [ ] Find out what the Boston Athletic Association's terms say about reusing results,
-      and decide whether the cleaned file should stay public
-- [ ] Decide what to do if a runner asks for their results to be removed
 
 ## Cloud services
 
