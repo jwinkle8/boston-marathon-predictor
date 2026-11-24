@@ -30,7 +30,7 @@ We used [Finishers Boston Marathon 2015, 2016 & 2017](https://www.kaggle.com/dat
 from Kaggle. It has one row per finisher for each of the three years (79,638 rows in
 total) with the runner's name, age, gender, city, their split times every 5K, and their
 official finish time. The data was scraped from the official Boston Marathon results
-site by the Kaggle author. Kaggle lists the license as "Unknown".
+site by the Kaggle author. Kaggle lists the license as "Unknown" [3].
 
 **Cleaning** (`src/clean_data.py`):
 
@@ -42,7 +42,7 @@ site by the Kaggle author. Kaggle lists the license as "Unknown".
 - Dropped 354 rows that were missing a split (shown as `-` in the raw files)
 - Replaced each runner's name with a number (`runner_id`), so the cleaned file has no names, bib numbers or cities in it
 
-The cleaned file has 79,284 rows and 67,427 different runners.
+The cleaned file has 79,284 rows and 67,427 different runners [3].
 
 | Column | What it is |
 |---|---|
@@ -106,6 +106,28 @@ the second half. The random forest is only a little better than plain linear reg
 The plot shows the model does well for most runners but misses the ones who slow down
 a lot late in the race (the points well below the red line). It can't see that coming
 from the first half alone.
+
+## Limitations
+
+- **The data is only from the Boston Marathon, and most Boston runners had to qualify.**
+  About 80% of the field qualified by running another marathon faster than a standard set by the Boston Athletic Association each year. The runners in our data are faster and better trained for the distance than the typical marathoner, so the predictions are likely too fast for an average runner [3].
+- **Three race days on one course.** The data only covers 2015, 2016 and 2017 [3], so the model has seen just three days of weather and can't tell a hot year from a cool one. Every race was also on Boston's course, so the predictions may not carry over to a course with different hills. Also, the model has no information about changes to the course over the years, such as construction or route adjustments which are common in urban marathons.
+- **The races were run before "supershoes" and newer fueling strategies became common.**
+  Both have made runners more efficient late in the race, which is exactly the part our model predicts. The model learned the late-race slowdown of 2015-2017 runners, so for today's runners its predictions may be too slow.
+- **We only know what the race organizers chose to record.** The only personal details in the results are age, gender, and where the runner is from, and we use just age and gender. Things that matter a lot for a finish time, like training volume or how many marathons someone has run, were never collected, so the model can't use them.
+- **Gender is only recorded as M or F.** The app and the API can only offer those two options because that's all the data has from these years of the Boston Marathon. Perhaps future data collection could include more inclusive gender options giving more insight into the performance of individuals who choose to specify other gender identities.
+- **The model assumes continuous race execution.** It does not account for interruptions during the race, such as bathroom breaks or injuries. Interruptions, especially after the half-marathon point, can significantly affect finish times, but the model has no way to know about them. 
+- **The model does not account for starting in a denser wave of runners.** Crowding at the start may affect a runner's pace, but the model has no information about it.
+The Boston Marathon traditionally starts with four waves [1], and runners may experience congestion after the start, especially in the early miles. The model has no information about which wave a runner started in, so it cannot account for this effect. Future years of the race are expected to introduce more waves of more runners, which could alleviate congestion for some waves of runners [1].
+
+## Ethics
+
+- **The dataset's license is unknown.** Kaggle lists the license as "Unknown" [3]. The Kaggle author scraped the results from the official Boston Marathon results site, and we don't know whether the site's terms of service or `robots.txt` allowed that [2]. We can't say for sure that we have the right to reuse or share this data. We don't share the raw files, but we do host a cleaned version of them in a public bucket.
+- **The runners didn't agree to be in this project.** The raw files have each runner's name, bib number, city, state and country [3]. Race results are public, but the runners were never asked about being used to train a model.
+- **The cleaned data has no names, but it isn't truly anonymous.** We replaced names
+  with a number and dropped bib numbers and locations. The cleaned file still has each runner's age, gender, race year and exact times, and those could be matched back to the public results to find out who a row belongs to [3].
+- **Gender is only M or F.** That's all the results record [3], so the app can't serve runners who don't fit either option. The model's interpretation of gender is therefore limited to the binary M/F interpretation of self-registered entries of runners. The Boston Athletic Association would need to update its data collection practices to include more inclusive gender options.
+- **The app is for fun and educational purposes.** A prediction shouldn't be used to make decisions about health, training or pacing during a race. We note this on the app (see "About this prediction").
 
 ## Cloud services
 
@@ -268,3 +290,10 @@ To switch the pipeline to a new version:
 
 1. Upload it: `gcloud storage cp data/clean/boston_clean_v2.csv gs://aipi510-boston-marathon/`
 2. Set `data.version` to `2` in `config.yaml`
+
+## References
+
+- [1] Boston Athletic Association. "[Bib Numbers, Start Assignments & Wave Times Announced
+  for 130th Boston Marathon presented by Bank of America](https://www.baa.org/news/bib-numbers-start-assignments-wave-times-announced-for-130th-boston-marathon-presented-by-bank-of-america/)."
+- [2] Boston Athletic Association. "[Privacy & Legal](https://www.baa.org/privacy-legal)."
+- [3] Kaggle. "[Finishers Boston Marathon 2015, 2016 & 2017](https://www.kaggle.com/datasets/rojour/boston-results)."
