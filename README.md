@@ -140,7 +140,16 @@ The Boston Marathon traditionally starts with four waves [1], and runners may ex
 
 ## How to run it
 
-You need Python 3.11 or greater. Run all the commands from the main folder of the repo.
+You need:
+
+- [Python](https://www.python.org/downloads/) 3.11 or greater
+- [Docker](https://docs.docker.com/get-started/get-docker/), for step 5 (on Windows and
+  Mac, Docker Desktop)
+- On Windows, [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows
+  Subsystem for Linux). The commands below are written for a Linux or Mac terminal, so
+  run them inside WSL.
+
+Run all the commands from the main folder of the repo.
 
 ### 1. Install the packages
 
