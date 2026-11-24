@@ -141,7 +141,7 @@ than one from all three splits.
 
 **Why we don't report AIC.** AIC scores a model on how well it fits minus a penalty for
 how many parameters it has, so we tried it as a secondary metric to see what the extra
-features cost the main model. We left it out for three reasons:
+features cost the main model. We left it out for two reasons:
 
 - The penalty is too small to matter. It is twice the number of feature columns: 14 for
   `all_splits` and 8 for each single-split model. On our 55,522 training rows the AIC
