@@ -85,10 +85,10 @@ Rules:
 
 ## Commits
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
+For further development of the project, follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-<type>(<optional scope>): <summary>
+<optional type>(<optional scope>): <summary>
 
 <optional body: what and why, not how>
 
@@ -130,7 +130,7 @@ chore(deps): bump scikit-learn to 1.9.1
 
 ### Title
 
-Use the same format as a commit summary:
+Use a similar format as a commit summary:
 
 ```
 feat(train): log feature importances to MLflow
@@ -191,7 +191,7 @@ Risky areas, trade-offs, follow-ups, or anything you want a closer look at.
 
 ### Comment conventions
 
-Prefix comments so intent and urgency are clear:
+When appropriate, prefix comments so intent and urgency are clear:
 
 | Prefix | Meaning | Blocks merge? |
 |---|---|---|
