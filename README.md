@@ -134,7 +134,7 @@ The earlier the checkpoint, the bigger the error, which makes sense: at 5K there
 still 37 km left to go wrong. Every model still beats its baseline by about 6 to 7
 minutes. All four are tested on the same runners, so we could compare them runner by
 runner: resampling the test runners 1,000 times, the 95% interval for each model's
-improvement over its baseline is at most 0.4 minutes wide and nowhere near zero (for
+improvement over its baseline is at most 0.5 minutes wide and nowhere near zero (for
 example 5.6 to 6.1 minutes for `5k_only`). The app shows each model's own test MAE as
 its "give or take", so a prediction from the 5K time alone is shown as less certain
 than one from all three splits.
@@ -229,7 +229,9 @@ config file, the predicted vs actual plot and the model itself.
 mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
-Then open http://localhost:5000.
+Then open http://localhost:5000. The four runs look like this:
+
+![The four training runs in the MLflow UI](images/mlflow_runs.png)
 
 ### 4. Run and test the API locally
 
