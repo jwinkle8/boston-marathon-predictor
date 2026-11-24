@@ -26,10 +26,13 @@ def to_clock(minutes):
     return f"{total_seconds // 3600}:{(total_seconds % 3600) // 60:02d}:{total_seconds % 60:02d}"
 
 
+SPLIT_NAMES = {"split_5k": "5K", "split_10k": "10K", "split_half": "halfway"}
+
 st.title("Boston Marathon Finish Time Predictor")
 st.write(
     "Enter your age, gender and your times at the first three checkpoints of the "
-    "race, and the model will predict your finish time."
+    "race, and the model will predict your finish time. If you don't know one of "
+    "the times, untick it. You need at least one."
 )
 st.caption(
     "The checkpoint times are your times *during the marathon*. For example, the halfway "
@@ -43,28 +46,36 @@ gender = col2.radio("Gender", ["Female", "Male"], horizontal=True)
 
 st.subheader("Your checkpoint times")
 
+know_5k = st.checkbox("I know my 5K time", value=True)
 col1, col2 = st.columns(2)
-min_5k = col1.number_input("5K: minutes", min_value=0, max_value=60, value=25)
-sec_5k = col2.number_input("5K: seconds", min_value=0, max_value=59, value=30)
+min_5k = col1.number_input("5K: minutes", min_value=0, max_value=60, value=25, disabled=not know_5k)
+sec_5k = col2.number_input("5K: seconds", min_value=0, max_value=59, value=30, disabled=not know_5k)
 
+know_10k = st.checkbox("I know my 10K time", value=True)
 col1, col2 = st.columns(2)
-min_10k = col1.number_input("10K: minutes", min_value=0, max_value=120, value=51)
-sec_10k = col2.number_input("10K: seconds", min_value=0, max_value=59, value=0)
+min_10k = col1.number_input("10K: minutes", min_value=0, max_value=120, value=51, disabled=not know_10k)
+sec_10k = col2.number_input("10K: seconds", min_value=0, max_value=59, value=0, disabled=not know_10k)
 
+know_half = st.checkbox("I know my halfway time", value=True)
 col1, col2, col3 = st.columns(3)
-hr_half = col1.number_input("Halfway: hours", min_value=1, max_value=5, value=1)
-min_half = col2.number_input("Halfway: minutes", min_value=0, max_value=59, value=48)
-sec_half = col3.number_input("Halfway: seconds", min_value=0, max_value=59, value=0)
+hr_half = col1.number_input("Halfway: hours", min_value=1, max_value=5, value=1, disabled=not know_half)
+min_half = col2.number_input("Halfway: minutes", min_value=0, max_value=59, value=48, disabled=not know_half)
+sec_half = col3.number_input("Halfway: seconds", min_value=0, max_value=59, value=0, disabled=not know_half)
 
 # ----- Send the inputs to the API -----
 if st.button("Predict my finish time", type="primary"):
-    runner = {
-        "age": age,
-        "gender": "F" if gender == "Female" else "M",
-        "split_5k": to_minutes(0, min_5k, sec_5k),
-        "split_10k": to_minutes(0, min_10k, sec_10k),
-        "split_half": to_minutes(hr_half, min_half, sec_half),
-    }
+    if not (know_5k or know_10k or know_half):
+        st.error("Enter at least one checkpoint time.")
+        st.stop()
+
+    # Only send the times the runner knows. The API picks the model that fits.
+    runner = {"age": age, "gender": "F" if gender == "Female" else "M"}
+    if know_5k:
+        runner["split_5k"] = to_minutes(0, min_5k, sec_5k)
+    if know_10k:
+        runner["split_10k"] = to_minutes(0, min_10k, sec_10k)
+    if know_half:
+        runner["split_half"] = to_minutes(hr_half, min_half, sec_half)
 
     try:
         with st.spinner("Asking the model..."):
@@ -78,8 +89,6 @@ if st.button("Predict my finish time", type="primary"):
         result = response.json()
         finish = result["predicted_finish_minutes"]
         error = result["typical_error_minutes"]
-        first_half = runner["split_half"]
-        second_half = finish - first_half
 
         st.metric("Predicted finish time", result["predicted_finish_time"])
         st.write(
@@ -87,10 +96,24 @@ if st.button("Predict my finish time", type="primary"):
             "was on average for runners it had never seen."
         )
 
-        col1, col2 = st.columns(2)
-        col1.metric("Your first half", to_clock(first_half))
-        col2.metric("Predicted second half", to_clock(second_half),
-                    delta=f"{second_half - first_half:+.1f} min vs first half", delta_color="inverse")
+        # Tell the runner which of their times the prediction is based on
+        used = [SPLIT_NAMES[s] for s in result["splits_used"]]
+        ignored = [SPLIT_NAMES[s] for s in SPLIT_NAMES if s in runner and s not in result["splits_used"]]
+        if len(used) < len(SPLIT_NAMES):
+            note = f"This prediction is based on your {used[0]} time only."
+            if ignored:
+                note += f" Your {ignored[0]} time wasn't used, because the later checkpoint tells the model more."
+            if "halfway" not in used:
+                note += " The earlier in the race the checkpoint is, the less sure the model can be."
+            st.info(note)
+
+        if know_half:
+            first_half = runner["split_half"]
+            second_half = finish - first_half
+            col1, col2 = st.columns(2)
+            col1.metric("Your first half", to_clock(first_half))
+            col2.metric("Predicted second half", to_clock(second_half),
+                        delta=f"{second_half - first_half:+.1f} min vs first half", delta_color="inverse")
 
     elif response.status_code == 400:
         # our API's own check, like splits that are out of order
