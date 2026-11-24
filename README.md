@@ -139,6 +139,18 @@ example 5.6 to 6.1 minutes for `5k_only`). The app shows each model's own test M
 its "give or take", so a prediction from the 5K time alone is shown as less certain
 than one from all three splits.
 
+**Why we don't report AIC.** AIC scores a model on how well it fits minus a penalty for
+how many parameters it has, so we tried it as a secondary metric to see what the extra
+features cost the main model. We left it out for three reasons:
+
+- The penalty is too small to matter. It is twice the number of feature columns: 14 for
+  `all_splits` and 8 for each single-split model. On our 55,522 training rows the AIC
+  scores themselves were about 20,000 or more apart, so a difference of 6 can't change
+  any conclusion.
+- After further research, we realized it isn't well defined for a random forest. AIC needs a count of the model's parameters,
+  which random forest models don't have. Counting features only makes sense for linear 
+  regression.
+
 ![Predicted vs actual finish time on the test set](images/predicted_vs_actual.png)
 
 The plot shows the model does well for most runners but misses the ones who slow down
