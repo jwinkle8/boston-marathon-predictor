@@ -192,7 +192,7 @@ The Boston Marathon traditionally starts with four waves [1], and runners may ex
 
 You need:
 
-- [Python](https://www.python.org/downloads/) 3.11 or greater
+- [Python](https://www.python.org/downloads/) 3.12 or greater
 - [Docker](https://docs.docker.com/get-started/get-docker/), for step 5 (on Windows and
   Mac, Docker Desktop)
 - On Windows, [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows
